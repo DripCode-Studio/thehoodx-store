@@ -42,7 +42,7 @@ export function Footer() {
                   THE-HØØDX
                 </span>
               </Link>
-              <p className="mx-auto max-w-xs text-sm leading-relaxed text-gray-400 md:mx-0">
+              <p className="mx-auto max-w-xs text-sm leading-relaxed text-gray-300 md:mx-0">
                 Born from the streets, built for royalty. We don&apos;t follow
                 trends — we set them.
               </p>
@@ -66,14 +66,14 @@ export function Footer() {
 
             {/* Quick Links */}
             <div className="space-y-6 text-center md:text-left">
-              <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-white/60">
+              <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-white/80">
                 Shop
               </h3>
               <ul className="space-y-3 text-sm">
                 <li>
                   <Link
                     href="/collections"
-                    className="text-gray-400 transition-colors hover:text-white"
+                    className="text-gray-300 transition-colors hover:text-white"
                   >
                     Collections
                   </Link>
@@ -81,7 +81,7 @@ export function Footer() {
                 <li>
                   <Link
                     href="/collections"
-                    className="text-gray-400 transition-colors hover:text-white"
+                    className="text-gray-300 transition-colors hover:text-white"
                   >
                     New Drops
                   </Link>
@@ -91,12 +91,12 @@ export function Footer() {
 
             {/* Contact */}
             <div className="space-y-6 text-center md:text-left">
-              <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-white/60">
+              <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-white/80">
                 Get in Touch
               </h3>
               <ul className="space-y-4 text-sm">
-                <li className="flex items-center justify-center gap-3 text-gray-400 md:justify-start">
-                  <Mail className="h-4 w-4 shrink-0 text-white/40" />
+                <li className="flex items-center justify-center gap-3 text-gray-300 md:justify-start">
+                  <Mail className="h-4 w-4 shrink-0 text-white/60" />
                   <a
                     href="mailto:thehoodxuk@gmail.com"
                     className="transition-colors hover:text-white"
@@ -104,12 +104,12 @@ export function Footer() {
                     thehoodxuk@gmail.com
                   </a>
                 </li>
-                <li className="flex items-center justify-center gap-3 text-gray-400 md:justify-start">
-                  <Phone className="h-4 w-4 shrink-0 text-white/40" />
+                <li className="flex items-center justify-center gap-3 text-gray-300 md:justify-start">
+                  <Phone className="h-4 w-4 shrink-0 text-white/60" />
                   <span>+1 (581) 991-6263</span>
                 </li>
-                <li className="flex items-center justify-center gap-3 text-gray-400 md:justify-start">
-                  <MapPin className="h-4 w-4 shrink-0 text-white/40" />
+                <li className="flex items-center justify-center gap-3 text-gray-300 md:justify-start">
+                  <MapPin className="h-4 w-4 shrink-0 text-white/60" />
                   <span>Quebec, Canada</span>
                 </li>
               </ul>
@@ -119,10 +119,10 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="flex flex-col items-center justify-between gap-4 py-8 sm:flex-row">
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-gray-400">
             &copy; {new Date().getFullYear()} THE-HØØDX. All rights reserved.
           </p>
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-white/20">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-white/40">
             Street Royalty
           </p>
         </div>
