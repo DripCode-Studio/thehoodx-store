@@ -12,7 +12,7 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: async (credentials: LoginInput) => {
-      const { data } = await apiClient.post("/auth/login", credentials);
+      const data = await apiClient.post("/auth/login", credentials);
       return AuthResponseSchema.parse(data);
     },
     onSuccess: () => {
@@ -26,7 +26,7 @@ export function useSignup() {
 
   return useMutation({
     mutationFn: async (credentials: SignupInput) => {
-      const { data } = await apiClient.post("/auth/signup", credentials);
+      const data = await apiClient.post("/auth/signup", credentials);
       return AuthResponseSchema.parse(data);
     },
     onSuccess: () => {
@@ -40,7 +40,7 @@ export function useLogout() {
 
   return useMutation({
     mutationFn: async () => {
-      const { data } = await apiClient.post("/auth/logout");
+      const data = await apiClient.post("/auth/logout");
       return data;
     },
     onSuccess: () => {
@@ -53,7 +53,7 @@ export function useLogout() {
 export function useCreateCheckoutSession() {
   return useMutation({
     mutationFn: async (items: any[]) => {
-      const { data } = await apiClient.post("/checkout/create-session", {
+      const data = await apiClient.post("/checkout/create-session", {
         items,
       });
       return CheckoutSessionSchema.parse(data);
