@@ -18,7 +18,7 @@ export function ProductCard({ product }: ProductCardProps) {
     >
       <div className="relative aspect-[3/4] overflow-hidden bg-neutral-100 dark:bg-neutral-900">
         <Image
-          src={product.image}
+          src={product.image || "/placeholder.jpg"}
           alt={product.name}
           fill
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
@@ -28,12 +28,12 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/10" />
 
         {/* Badges */}
-        {product.stock < 10 && product.stock > 0 && (
+        {Number(product.stock) < 10 && Number(product.stock) > 0 && (
           <span className="absolute left-3 top-3 rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-black">
             Low Stock
           </span>
         )}
-        {product.stock === 0 && (
+        {Number(product.stock) === 0 && (
           <span className="absolute left-3 top-3 rounded-full bg-black px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
             Sold Out
           </span>

@@ -26,7 +26,7 @@ export function CartItemCard({
     <div className="flex gap-4 rounded-2xl border border-border p-3">
       <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-neutral-100 dark:bg-neutral-900">
         <Image
-          src={item.product.image}
+          src={item.product.image || "/placeholder.jpg"}
           alt={item.product.name}
           fill
           className="object-cover"

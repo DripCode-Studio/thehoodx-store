@@ -28,7 +28,9 @@ Authorization: Bearer <access_token>
 2. [Products](#products-endpoints)
 3. [Categories](#categories-endpoints)
 4. [Checkout](#checkout-endpoints)
-5. [Frontend Integration Guide](#frontend-integration-guide)
+5. [Orders](#orders-endpoints)
+6. [Admin](#admin-endpoints)
+7. [Frontend Integration Guide](#frontend-integration-guide)
 
 ---
 
@@ -70,8 +72,6 @@ POST /api/auth/signup
 
 > **Note**: The refresh token is set as an HTTP-only cookie and is not included in the response body.
 
-````
-
 **Errors:**
 
 - `400` - Name, email, and password are required / Password must be at least 8 characters
@@ -85,7 +85,7 @@ Authenticate an existing user.
 
 ```http
 POST /api/auth/login
-````
+```
 
 **Request Body:**
 
@@ -104,7 +104,9 @@ POST /api/auth/login
     "id": "uuid",
     "name": "John Doe",
     "email": "john@example.com",
-    "role": "USER"
+    "role": "USER",
+    "createdAt": "2026-03-06T00:00:00.000Z",
+    "updatedAt": "2026-03-06T00:00:00.000Z"
   },
   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
@@ -121,7 +123,7 @@ POST /api/auth/login
 
 ### Get Current User
 
-Get the authenticated user's profile.
+Get the authenticated user's profile. Returns a fresh access token.
 
 ```http
 GET /api/auth/me
@@ -136,7 +138,9 @@ Authorization: Bearer <access_token>
     "id": "uuid",
     "name": "John Doe",
     "email": "john@example.com",
-    "role": "USER"
+    "role": "USER",
+    "createdAt": "2026-03-06T00:00:00.000Z",
+    "updatedAt": "2026-03-06T00:00:00.000Z"
   },
   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
@@ -166,15 +170,16 @@ POST /api/auth/refresh
   "user": {
     "id": "uuid",
     "name": "John Doe",
-    "email": "john@example.com"
+    "email": "john@example.com",
+    "role": "USER",
+    "createdAt": "2026-03-06T00:00:00.000Z",
+    "updatedAt": "2026-03-06T00:00:00.000Z"
   },
   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
 > **Note**: A new refresh token is set as an HTTP-only cookie.
-
-````
 
 **Errors:**
 
@@ -189,7 +194,7 @@ Invalidate the refresh token and clear the cookie.
 
 ```http
 POST /api/auth/logout
-````
+```
 
 > **Note**: No request body needed. The refresh token is read from the HTTP-only cookie.
 
@@ -261,7 +266,7 @@ GET /api/products
 | search    | string  | Search in name and description                                 |
 | sort      | string  | Sort order: price-asc, price-desc, name-asc, name-desc, newest |
 | page      | number  | Page number (default: 1)                                       |
-| limit     | number  | Items per page (default: 12)                                   |
+| limit     | number  | Items per page (default: 20, max: 100)                         |
 
 **Example Request:**
 
@@ -285,19 +290,23 @@ GET /api/products?category=t-shirts&minPrice=20&maxPrice=100&sort=price-asc&page
       "featured": true,
       "stock": 50,
       "categoryId": "uuid",
+      "createdAt": "2026-03-06T00:00:00.000Z",
+      "updatedAt": "2026-03-06T00:00:00.000Z",
       "category": {
         "id": "uuid",
         "name": "T-Shirts",
-        "slug": "t-shirts"
+        "slug": "t-shirts",
+        "description": "Comfortable cotton t-shirts",
+        "image": "https://example.com/category.jpg",
+        "createdAt": "2026-03-06T00:00:00.000Z",
+        "updatedAt": "2026-03-06T00:00:00.000Z"
       }
     }
   ],
-  "pagination": {
-    "page": 1,
-    "limit": 10,
-    "total": 100,
-    "totalPages": 10
-  }
+  "total": 100,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 10
 }
 ```
 
@@ -313,9 +322,9 @@ GET /api/products/featured
 
 **Query Parameters:**
 
-| Parameter | Type   | Description                |
-| --------- | ------ | -------------------------- |
-| limit     | number | Maximum products to return |
+| Parameter | Type   | Description                          |
+| --------- | ------ | ------------------------------------ |
+| limit     | number | Maximum products to return (default: 6) |
 
 **Response (200):**
 
@@ -325,9 +334,25 @@ GET /api/products/featured
     {
       "id": "uuid",
       "name": "Featured Product",
+      "description": "A premium featured product",
       "price": 49.99,
       "image": "https://example.com/image.jpg",
-      "featured": true
+      "sizes": ["S", "M", "L"],
+      "colors": ["black", "white"],
+      "featured": true,
+      "stock": 25,
+      "categoryId": "uuid",
+      "createdAt": "2026-03-06T00:00:00.000Z",
+      "updatedAt": "2026-03-06T00:00:00.000Z",
+      "category": {
+        "id": "uuid",
+        "name": "T-Shirts",
+        "slug": "t-shirts",
+        "description": "Comfortable cotton t-shirts",
+        "image": "https://example.com/category.jpg",
+        "createdAt": "2026-03-06T00:00:00.000Z",
+        "updatedAt": "2026-03-06T00:00:00.000Z"
+      }
     }
   ]
 }
@@ -347,17 +372,21 @@ GET /api/products/filters
 
 ```json
 {
+  "sizes": ["XS", "S", "M", "L", "XL", "XXL"],
+  "colors": ["black", "white", "red", "blue", "green"],
   "priceRange": {
     "min": 10,
     "max": 500
   },
-  "sizes": ["XS", "S", "M", "L", "XL", "XXL"],
-  "colors": ["black", "white", "red", "blue", "green"],
   "categories": [
     {
       "id": "uuid",
       "name": "T-Shirts",
-      "slug": "t-shirts"
+      "slug": "t-shirts",
+      "description": "Comfortable cotton t-shirts",
+      "image": "https://example.com/category.jpg",
+      "createdAt": "2026-03-06T00:00:00.000Z",
+      "updatedAt": "2026-03-06T00:00:00.000Z"
     }
   ]
 }
@@ -367,7 +396,7 @@ GET /api/products/filters
 
 ### Get Product by ID
 
-Get a single product with related products.
+Get a single product with related products from the same category.
 
 ```http
 GET /api/products/:id
@@ -387,18 +416,42 @@ GET /api/products/:id
     "colors": ["black", "white", "navy"],
     "featured": true,
     "stock": 50,
+    "categoryId": "uuid",
+    "createdAt": "2026-03-06T00:00:00.000Z",
+    "updatedAt": "2026-03-06T00:00:00.000Z",
     "category": {
       "id": "uuid",
       "name": "T-Shirts",
-      "slug": "t-shirts"
+      "slug": "t-shirts",
+      "description": "Comfortable cotton t-shirts",
+      "image": "https://example.com/category.jpg",
+      "createdAt": "2026-03-06T00:00:00.000Z",
+      "updatedAt": "2026-03-06T00:00:00.000Z"
     }
   },
   "related": [
     {
       "id": "uuid",
       "name": "Related Product",
+      "description": "Another great product",
       "price": 34.99,
-      "image": "https://example.com/related.jpg"
+      "image": "https://example.com/related.jpg",
+      "sizes": ["M", "L"],
+      "colors": ["black"],
+      "featured": false,
+      "stock": 30,
+      "categoryId": "uuid",
+      "createdAt": "2026-03-06T00:00:00.000Z",
+      "updatedAt": "2026-03-06T00:00:00.000Z",
+      "category": {
+        "id": "uuid",
+        "name": "T-Shirts",
+        "slug": "t-shirts",
+        "description": "Comfortable cotton t-shirts",
+        "image": "https://example.com/category.jpg",
+        "createdAt": "2026-03-06T00:00:00.000Z",
+        "updatedAt": "2026-03-06T00:00:00.000Z"
+      }
     }
   ]
 }
@@ -415,7 +468,7 @@ GET /api/products/:id
 
 ### List Categories
 
-Get all categories.
+Get all categories (sorted alphabetically by name).
 
 ```http
 GET /api/categories
@@ -431,7 +484,9 @@ GET /api/categories
       "name": "T-Shirts",
       "slug": "t-shirts",
       "description": "Comfortable cotton t-shirts",
-      "image": "https://example.com/category.jpg"
+      "image": "https://example.com/category.jpg",
+      "createdAt": "2026-03-06T00:00:00.000Z",
+      "updatedAt": "2026-03-06T00:00:00.000Z"
     }
   ]
 }
@@ -441,7 +496,7 @@ GET /api/categories
 
 ### Get Category by ID or Slug
 
-Get a single category.
+Get a single category. You can pass either the UUID or the slug.
 
 ```http
 GET /api/categories/:idOrSlug
@@ -456,7 +511,9 @@ GET /api/categories/:idOrSlug
     "name": "T-Shirts",
     "slug": "t-shirts",
     "description": "Comfortable cotton t-shirts",
-    "image": "https://example.com/category.jpg"
+    "image": "https://example.com/category.jpg",
+    "createdAt": "2026-03-06T00:00:00.000Z",
+    "updatedAt": "2026-03-06T00:00:00.000Z"
   }
 }
 ```
@@ -476,7 +533,7 @@ Get products in a specific category with filtering and pagination.
 GET /api/categories/:idOrSlug/products
 ```
 
-**Query Parameters:** Same as [List Products](#list-products)
+**Query Parameters:** Same as [List Products](#list-products) (except `category` — it's determined by the URL param)
 
 **Response (200):**
 
@@ -485,26 +542,105 @@ GET /api/categories/:idOrSlug/products
   "category": {
     "id": "uuid",
     "name": "T-Shirts",
-    "slug": "t-shirts"
+    "slug": "t-shirts",
+    "description": "Comfortable cotton t-shirts",
+    "image": "https://example.com/category.jpg",
+    "createdAt": "2026-03-06T00:00:00.000Z",
+    "updatedAt": "2026-03-06T00:00:00.000Z"
   },
-  "products": [...],
-  "page": 1,
-  "limit": 12,
+  "products": [
+    {
+      "id": "uuid",
+      "name": "Classic T-Shirt",
+      "description": "A comfortable cotton t-shirt",
+      "price": 29.99,
+      "image": "https://example.com/image.jpg",
+      "sizes": ["S", "M", "L", "XL"],
+      "colors": ["black", "white", "navy"],
+      "featured": true,
+      "stock": 50,
+      "categoryId": "uuid",
+      "createdAt": "2026-03-06T00:00:00.000Z",
+      "updatedAt": "2026-03-06T00:00:00.000Z",
+      "category": {
+        "id": "uuid",
+        "name": "T-Shirts",
+        "slug": "t-shirts",
+        "description": "Comfortable cotton t-shirts",
+        "image": "https://example.com/category.jpg",
+        "createdAt": "2026-03-06T00:00:00.000Z",
+        "updatedAt": "2026-03-06T00:00:00.000Z"
+      }
+    }
+  ],
   "total": 50,
-  "totalPages": 5
+  "page": 1,
+  "limit": 20,
+  "totalPages": 3
 }
 ```
+
+**Errors:**
+
+- `400` - Category ID or slug is required
+- `404` - Category not found
 
 ---
 
 ## Checkout Endpoints
 
+### Checkout Workflow Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         CHECKOUT WORKFLOW                                │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  1. USER ADDS ITEMS TO CART (Frontend State)                            │
+│     └── Store: productId, quantity, size, color                         │
+│                                                                         │
+│  2. USER ENTERS SHIPPING INFO & CLICKS CHECKOUT                         │
+│     └── Requires authentication                                         │
+│                                                                         │
+│  3. FRONTEND: POST /api/checkout/create-session                         │
+│     ├── Sends: { items: [...], shipping: {...} }                        │
+│     ├── Backend validates products, sizes, colors, stock                │
+│     ├── Backend creates Order (status: PENDING)                         │
+│     ├── Backend creates Stripe Checkout Session                         │
+│     └── Returns: { sessionId, url, orderId }                            │
+│                                                                         │
+│  4. FRONTEND: Redirect to Stripe Checkout                               │
+│     └── window.location.href = url  (or stripe.redirectToCheckout)      │
+│                                                                         │
+│  5. USER COMPLETES PAYMENT ON STRIPE                                    │
+│     └── Stripe redirects to success_url with session_id                 │
+│                                                                         │
+│  6. STRIPE WEBHOOK: POST /api/checkout/webhook                          │
+│     ├── Event: checkout.session.completed → Order → PROCESSING          │
+│     ├── Event: checkout.session.expired → Order → CANCELLED             │
+│     └── Event: payment_intent.payment_failed → Logged                   │
+│                                                                         │
+│  7. SUCCESS PAGE: GET /api/orders/session/:sessionId                    │
+│     └── Show order confirmation with details                            │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Order Status Flow:**
+
+```
+PENDING → PROCESSING → SHIPPED → DELIVERED
+    │
+    └──→ CANCELLED (if payment expires or fails)
+```
+
 ### Create Checkout Session
 
-Create a Stripe checkout session.
+Create a Stripe checkout session and a pending order. **Requires authentication.**
 
 ```http
 POST /api/checkout/create-session
+Authorization: Bearer <access_token>
 ```
 
 **Request Body:**
@@ -513,12 +649,19 @@ POST /api/checkout/create-session
 {
   "items": [
     {
-      "name": "Classic T-Shirt",
-      "price": 29.99,
+      "productId": "uuid",
       "quantity": 2,
-      "image": "https://example.com/image.jpg"
+      "size": "M",
+      "color": "black"
     }
-  ]
+  ],
+  "shipping": {
+    "name": "John Doe",
+    "address": "123 Main St",
+    "city": "New York",
+    "postal": "10001",
+    "country": "US"
+  }
 }
 ```
 
@@ -527,19 +670,22 @@ POST /api/checkout/create-session
 ```json
 {
   "sessionId": "cs_test_...",
-  "url": "https://checkout.stripe.com/c/pay/cs_test_..."
+  "url": "https://checkout.stripe.com/c/pay/cs_test_...",
+  "orderId": "uuid"
 }
 ```
 
 **Errors:**
 
-- `400` - Cart items are required
+- `400` - Cart items are required / Complete shipping information is required / Invalid size or color / Insufficient stock
+- `401` - Unauthorized (missing or invalid token)
+- `404` - Product not found
 
 ---
 
 ### Get Checkout Session
 
-Get the status of a checkout session.
+Get the status of a checkout session and its associated order.
 
 ```http
 GET /api/checkout/session/:id
@@ -550,9 +696,417 @@ GET /api/checkout/session/:id
 ```json
 {
   "status": "paid",
-  "customerEmail": "john@example.com"
+  "customerEmail": "john@example.com",
+  "orderId": "uuid",
+  "order": {
+    "id": "uuid",
+    "userId": "uuid",
+    "total": 59.98,
+    "status": "PROCESSING",
+    "shippingName": "John Doe",
+    "shippingAddress": "123 Main St",
+    "shippingCity": "New York",
+    "shippingPostal": "10001",
+    "shippingCountry": "US",
+    "stripeSessionId": "cs_test_...",
+    "createdAt": "2026-03-07T00:00:00.000Z",
+    "updatedAt": "2026-03-07T00:00:00.000Z",
+    "items": [
+      {
+        "id": "uuid",
+        "orderId": "uuid",
+        "productId": "uuid",
+        "quantity": 2,
+        "price": 29.99,
+        "size": "M",
+        "color": "black",
+        "product": {
+          "id": "uuid",
+          "name": "Classic T-Shirt",
+          "image": "https://example.com/image.jpg"
+        }
+      }
+    ],
+    "user": {
+      "id": "uuid",
+      "name": "John Doe",
+      "email": "john@example.com"
+    }
+  }
 }
 ```
+
+> **Note**: `order` may be `null` if no order is linked to the session.
+
+**Errors:**
+
+- `400` - Session ID is required
+
+---
+
+### Stripe Webhook
+
+Handle Stripe webhook events. This endpoint is called by Stripe automatically.
+
+```http
+POST /api/checkout/webhook
+```
+
+**Headers:**
+
+```
+stripe-signature: <webhook_signature>
+Content-Type: application/json
+```
+
+**Handled Events:**
+
+- `checkout.session.completed` - Updates order status to `PROCESSING`
+- `checkout.session.expired` - Updates order status to `CANCELLED`
+- `payment_intent.payment_failed` - Logged for monitoring
+
+> **Note:** This endpoint requires raw body (not JSON parsed) for signature verification. The server is configured to handle this automatically.
+
+---
+
+## Orders Endpoints
+
+All order endpoints require authentication.
+
+### Get My Orders
+
+Get the authenticated user's orders with pagination.
+
+```http
+GET /api/orders
+Authorization: Bearer <access_token>
+```
+
+**Query Parameters:**
+
+| Parameter | Type   | Description                                                          |
+| --------- | ------ | -------------------------------------------------------------------- |
+| page      | number | Page number (default: 1)                                             |
+| limit     | number | Items per page (default: 10)                                         |
+| status    | string | Filter by status: PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED |
+
+**Response (200):**
+
+```json
+{
+  "orders": [
+    {
+      "id": "uuid",
+      "userId": "uuid",
+      "total": 59.98,
+      "status": "PROCESSING",
+      "shippingName": "John Doe",
+      "shippingAddress": "123 Main St",
+      "shippingCity": "New York",
+      "shippingPostal": "10001",
+      "shippingCountry": "US",
+      "stripeSessionId": "cs_test_...",
+      "createdAt": "2026-03-07T00:00:00.000Z",
+      "updatedAt": "2026-03-07T00:00:00.000Z",
+      "items": [
+        {
+          "id": "uuid",
+          "orderId": "uuid",
+          "productId": "uuid",
+          "quantity": 2,
+          "price": 29.99,
+          "size": "M",
+          "color": "black",
+          "product": {
+            "id": "uuid",
+            "name": "Classic T-Shirt",
+            "image": "https://example.com/image.jpg"
+          }
+        }
+      ]
+    }
+  ],
+  "total": 5,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 1
+}
+```
+
+---
+
+### Get Order by ID
+
+Get a single order by ID. Users can only access their own orders.
+
+```http
+GET /api/orders/:id
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+
+```json
+{
+  "order": {
+    "id": "uuid",
+    "userId": "uuid",
+    "total": 59.98,
+    "status": "PROCESSING",
+    "shippingName": "John Doe",
+    "shippingAddress": "123 Main St",
+    "shippingCity": "New York",
+    "shippingPostal": "10001",
+    "shippingCountry": "US",
+    "stripeSessionId": "cs_test_...",
+    "createdAt": "2026-03-07T00:00:00.000Z",
+    "updatedAt": "2026-03-07T00:00:00.000Z",
+    "items": [
+      {
+        "id": "uuid",
+        "orderId": "uuid",
+        "productId": "uuid",
+        "quantity": 2,
+        "price": 29.99,
+        "size": "M",
+        "color": "black",
+        "product": {
+          "id": "uuid",
+          "name": "Classic T-Shirt",
+          "description": "A comfortable cotton t-shirt",
+          "price": 29.99,
+          "image": "https://example.com/image.jpg",
+          "sizes": ["S", "M", "L", "XL"],
+          "colors": ["black", "white", "navy"],
+          "featured": true,
+          "stock": 50,
+          "categoryId": "uuid",
+          "createdAt": "2026-03-06T00:00:00.000Z",
+          "updatedAt": "2026-03-06T00:00:00.000Z"
+        }
+      }
+    ],
+    "user": {
+      "id": "uuid",
+      "name": "John Doe",
+      "email": "john@example.com"
+    }
+  }
+}
+```
+
+**Errors:**
+
+- `400` - Order ID is required
+- `401` - Unauthorized
+- `403` - Access denied (not your order)
+- `404` - Order not found
+
+---
+
+### Get Order by Stripe Session
+
+Get an order by its Stripe session ID. Useful for success/confirmation pages.
+
+```http
+GET /api/orders/session/:sessionId
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+
+```json
+{
+  "order": {
+    "id": "uuid",
+    "userId": "uuid",
+    "total": 59.98,
+    "status": "PROCESSING",
+    "shippingName": "John Doe",
+    "shippingAddress": "123 Main St",
+    "shippingCity": "New York",
+    "shippingPostal": "10001",
+    "shippingCountry": "US",
+    "stripeSessionId": "cs_test_...",
+    "createdAt": "2026-03-07T00:00:00.000Z",
+    "updatedAt": "2026-03-07T00:00:00.000Z",
+    "items": [
+      {
+        "id": "uuid",
+        "orderId": "uuid",
+        "productId": "uuid",
+        "quantity": 2,
+        "price": 29.99,
+        "size": "M",
+        "color": "black",
+        "product": {
+          "id": "uuid",
+          "name": "Classic T-Shirt",
+          "description": "A comfortable cotton t-shirt",
+          "price": 29.99,
+          "image": "https://example.com/image.jpg",
+          "sizes": ["S", "M", "L", "XL"],
+          "colors": ["black", "white", "navy"],
+          "featured": true,
+          "stock": 50,
+          "categoryId": "uuid",
+          "createdAt": "2026-03-06T00:00:00.000Z",
+          "updatedAt": "2026-03-06T00:00:00.000Z"
+        }
+      }
+    ]
+  }
+}
+```
+
+**Errors:**
+
+- `401` - Unauthorized
+- `403` - Access denied (not your order)
+- `404` - Order not found
+
+---
+
+## Admin Endpoints
+
+### Get All Orders (Admin)
+
+Get all orders across all users with pagination.
+
+```http
+GET /api/orders/admin/all
+Authorization: Bearer <access_token>
+```
+
+**Query Parameters:**
+
+| Parameter | Type   | Description                                                          |
+| --------- | ------ | -------------------------------------------------------------------- |
+| page      | number | Page number (default: 1)                                             |
+| limit     | number | Items per page (default: 10)                                         |
+| status    | string | Filter by status: PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED |
+
+**Response (200):**
+
+```json
+{
+  "orders": [
+    {
+      "id": "uuid",
+      "userId": "uuid",
+      "total": 59.98,
+      "status": "PROCESSING",
+      "shippingName": "John Doe",
+      "shippingAddress": "123 Main St",
+      "shippingCity": "New York",
+      "shippingPostal": "10001",
+      "shippingCountry": "US",
+      "stripeSessionId": "cs_test_...",
+      "createdAt": "2026-03-07T00:00:00.000Z",
+      "updatedAt": "2026-03-07T00:00:00.000Z",
+      "items": [
+        {
+          "id": "uuid",
+          "orderId": "uuid",
+          "productId": "uuid",
+          "quantity": 2,
+          "price": 29.99,
+          "size": "M",
+          "color": "black",
+          "product": {
+            "id": "uuid",
+            "name": "Classic T-Shirt",
+            "image": "https://example.com/image.jpg"
+          }
+        }
+      ]
+    }
+  ],
+  "total": 25,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 3
+}
+```
+
+---
+
+### Update Order Status (Admin)
+
+Update an order's status.
+
+```http
+PATCH /api/orders/:id/status
+Authorization: Bearer <access_token>
+```
+
+**Request Body:**
+
+```json
+{
+  "status": "SHIPPED"
+}
+```
+
+**Valid Status Values:**
+
+- `PENDING` - Order created, awaiting payment
+- `PROCESSING` - Payment received, preparing order
+- `SHIPPED` - Order shipped
+- `DELIVERED` - Order delivered
+- `CANCELLED` - Order cancelled
+
+**Response (200):**
+
+```json
+{
+  "order": {
+    "id": "uuid",
+    "userId": "uuid",
+    "total": 59.98,
+    "status": "SHIPPED",
+    "shippingName": "John Doe",
+    "shippingAddress": "123 Main St",
+    "shippingCity": "New York",
+    "shippingPostal": "10001",
+    "shippingCountry": "US",
+    "stripeSessionId": "cs_test_...",
+    "createdAt": "2026-03-07T00:00:00.000Z",
+    "updatedAt": "2026-03-07T00:00:00.000Z",
+    "items": [
+      {
+        "id": "uuid",
+        "orderId": "uuid",
+        "productId": "uuid",
+        "quantity": 2,
+        "price": 29.99,
+        "size": "M",
+        "color": "black",
+        "product": {
+          "id": "uuid",
+          "name": "Classic T-Shirt",
+          "description": "A comfortable cotton t-shirt",
+          "price": 29.99,
+          "image": "https://example.com/image.jpg",
+          "sizes": ["S", "M", "L", "XL"],
+          "colors": ["black", "white", "navy"],
+          "featured": true,
+          "stock": 50,
+          "categoryId": "uuid",
+          "createdAt": "2026-03-06T00:00:00.000Z",
+          "updatedAt": "2026-03-06T00:00:00.000Z"
+        }
+      }
+    ]
+  }
+}
+```
+
+**Errors:**
+
+- `400` - Order ID is required
+- `401` - Unauthorized
+- `404` - Order not found
 
 ---
 
@@ -564,7 +1118,7 @@ Create an API client with fetch that supports cookies:
 
 ```typescript
 // lib/api.ts
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 class ApiClient {
   private accessToken: string | null = null;
@@ -598,7 +1152,7 @@ class ApiClient {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || "API Error");
+      throw new Error(error.error || "API Error");
     }
 
     return response.json();
@@ -634,6 +1188,13 @@ class ApiClient {
     // No body needed - refresh token is in cookie
     return this.request("/auth/logout", {
       method: "POST",
+    });
+  }
+
+  async changePassword(currentPassword: string, newPassword: string) {
+    return this.request("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ currentPassword, newPassword }),
     });
   }
 
@@ -673,20 +1234,54 @@ class ApiClient {
   // Checkout methods
   async createCheckoutSession(
     items: Array<{
-      name: string;
-      price: number;
+      productId: string;
       quantity: number;
-      image?: string;
+      size: string;
+      color: string;
     }>,
+    shipping: {
+      name: string;
+      address: string;
+      city: string;
+      postal: string;
+      country: string;
+    },
   ) {
     return this.request("/checkout/create-session", {
       method: "POST",
-      body: JSON.stringify({ items }),
+      body: JSON.stringify({ items, shipping }),
     });
   }
 
   async getCheckoutSession(sessionId: string) {
     return this.request(`/checkout/session/${sessionId}`);
+  }
+
+  // Order methods
+  async getOrders(params?: { page?: number; limit?: number; status?: string }) {
+    const query = params ? "?" + new URLSearchParams(params as Record<string, string>).toString() : "";
+    return this.request(`/orders${query}`);
+  }
+
+  async getOrder(orderId: string) {
+    return this.request(`/orders/${orderId}`);
+  }
+
+  async getOrderBySession(sessionId: string) {
+    return this.request(`/orders/session/${sessionId}`);
+  }
+
+  // Admin methods
+  async getAllOrders(params?: { page?: number; limit?: number; status?: string }) {
+    const query = params ? "?" + new URLSearchParams(params as Record<string, string>).toString() : "";
+    return this.request(`/orders/admin/all${query}`);
+  }
+
+  async updateOrderStatus(orderId: string, status: string) {
+    return this.request(`/orders/${orderId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
   }
 }
 
@@ -705,6 +1300,8 @@ interface User {
   name: string;
   email: string;
   role: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface AuthContextType {
@@ -804,16 +1401,32 @@ const stripePromise = loadStripe(
 );
 
 interface CartItem {
-  name: string;
-  price: number;
+  productId: string;
   quantity: number;
-  image?: string;
+  size: string;
+  color: string;
+}
+
+interface ShippingInfo {
+  name: string;
+  address: string;
+  city: string;
+  postal: string;
+  country: string;
 }
 
 export function useCheckout() {
-  const checkout = async (items: CartItem[]) => {
+  const checkout = async (items: CartItem[], shipping: ShippingInfo) => {
     try {
-      const { sessionId } = (await api.createCheckoutSession(items)) as any;
+      const { sessionId, orderId } = (await api.createCheckoutSession(
+        items,
+        shipping,
+      )) as {
+        sessionId: string;
+        url: string;
+        orderId: string;
+      };
+
       const stripe = await stripePromise;
 
       if (!stripe) {
@@ -825,6 +1438,8 @@ export function useCheckout() {
       if (error) {
         throw error;
       }
+
+      return { orderId };
     } catch (error) {
       console.error("Checkout error:", error);
       throw error;
@@ -835,41 +1450,250 @@ export function useCheckout() {
 }
 ```
 
-### 4. Environment Variables
+### 4. Checkout Flow Example
+
+```typescript
+// pages/checkout.tsx
+import { useState } from 'react';
+import { useCheckout } from '@/hooks/useCheckout';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/router';
+
+interface CartItem {
+  productId: string;
+  name: string;
+  price: number;
+  quantity: number;
+  size: string;
+  color: string;
+  image?: string;
+}
+
+export default function CheckoutPage() {
+  const { user } = useAuth();
+  const { checkout } = useCheckout();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Get cart from your cart state/context
+  const cartItems: CartItem[] = []; // Your cart items
+
+  const [shipping, setShipping] = useState({
+    name: user?.name || '',
+    address: '',
+    city: '',
+    postal: '',
+    country: '',
+  });
+
+  const handleCheckout = async () => {
+    if (!user) {
+      router.push('/login?redirect=/checkout');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Transform cart items to checkout format
+      const checkoutItems = cartItems.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        size: item.size,
+        color: item.color,
+      }));
+
+      await checkout(checkoutItems, shipping);
+      // User will be redirected to Stripe Checkout
+    } catch (error) {
+      console.error('Checkout failed:', error);
+      // Show error message
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      {/* Shipping form */}
+      <form>
+        <input
+          placeholder="Full Name"
+          value={shipping.name}
+          onChange={(e) => setShipping(s => ({ ...s, name: e.target.value }))}
+        />
+        <input
+          placeholder="Address"
+          value={shipping.address}
+          onChange={(e) => setShipping(s => ({ ...s, address: e.target.value }))}
+        />
+        <input
+          placeholder="City"
+          value={shipping.city}
+          onChange={(e) => setShipping(s => ({ ...s, city: e.target.value }))}
+        />
+        <input
+          placeholder="Postal Code"
+          value={shipping.postal}
+          onChange={(e) => setShipping(s => ({ ...s, postal: e.target.value }))}
+        />
+        <input
+          placeholder="Country"
+          value={shipping.country}
+          onChange={(e) => setShipping(s => ({ ...s, country: e.target.value }))}
+        />
+      </form>
+
+      <button onClick={handleCheckout} disabled={isLoading}>
+        {isLoading ? 'Processing...' : 'Proceed to Payment'}
+      </button>
+    </div>
+  );
+}
+```
+
+### 5. Success Page
+
+```typescript
+// pages/checkout/success.tsx
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import { api } from '@/lib/api';
+
+export default function CheckoutSuccessPage() {
+  const router = useRouter();
+  const { session_id } = router.query;
+  const [order, setOrder] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (session_id) {
+      api.getOrderBySession(session_id as string)
+        .then((data: any) => setOrder(data.order))
+        .catch((err) => setError('Could not load order details'));
+    }
+  }, [session_id]);
+
+  if (error) return <div>{error}</div>;
+  if (!order) return <div>Loading order details...</div>;
+
+  return (
+    <div>
+      <h1>Thank you for your order!</h1>
+      <p>Order ID: {order.id}</p>
+      <p>Status: {order.status}</p>
+      <p>Total: ${order.total.toFixed(2)}</p>
+
+      <h2>Items</h2>
+      <ul>
+        {order.items.map((item: any) => (
+          <li key={item.id}>
+            {item.product.name} - {item.size} / {item.color} × {item.quantity}
+          </li>
+        ))}
+      </ul>
+
+      <h2>Shipping To</h2>
+      <p>{order.shippingName}</p>
+      <p>{order.shippingAddress}</p>
+      <p>{order.shippingCity}, {order.shippingPostal}</p>
+      <p>{order.shippingCountry}</p>
+    </div>
+  );
+}
+```
+
+### 6. Orders Page
+
+```typescript
+// pages/orders.tsx
+import { useEffect, useState } from 'react';
+import { api } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
+
+export default function OrdersPage() {
+  const { user } = useAuth();
+  const [orders, setOrders] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    if (user) {
+      api.getOrders({ page, limit: 10 })
+        .then((data: any) => {
+          setOrders(data.orders);
+          setTotalPages(data.totalPages);
+        });
+    }
+  }, [user, page]);
+
+  if (!user) return <div>Please log in to view orders</div>;
+
+  return (
+    <div>
+      <h1>My Orders</h1>
+      {orders.length === 0 ? (
+        <p>No orders yet</p>
+      ) : (
+        <ul>
+          {orders.map((order) => (
+            <li key={order.id}>
+              <Link href={`/orders/${order.id}`}>
+                Order #{order.id.slice(0, 8)}... - {order.status} - ${order.total.toFixed(2)}
+              </Link>
+              <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Pagination */}
+      <div>
+        <button onClick={() => setPage(p => p - 1)} disabled={page === 1}>
+          Previous
+        </button>
+        <span>Page {page} of {totalPages}</span>
+        <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages}>
+          Next
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+### 7. Environment Variables
 
 ```env
 # Frontend (.env.local)
-NEXT_PUBLIC_API_URL=http://localhost:8000/api
+NEXT_PUBLIC_API_URL=http://localhost:4000/api
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 ```
 
-### 5. Error Handling
+### 8. Error Handling
 
-```typescript
-// lib/errors.ts
-export class ApiError extends Error {
-  status: number;
+All error responses from the API use this format:
 
-  constructor(message: string, status: number) {
-    super(message);
-    this.status = status;
-  }
-}
-
-// Usage in components
-try {
-  await api.login(email, password);
-} catch (error) {
-  if (error instanceof ApiError) {
-    if (error.status === 401) {
-      // Handle invalid credentials
-    }
-  }
-  // Handle generic error
+```json
+{
+  "error": "Error description"
 }
 ```
 
-### 6. Health Check
+Example error handling in a component:
+
+```typescript
+try {
+  await api.login(email, password);
+} catch (error) {
+  if (error instanceof Error) {
+    // error.message contains the error text from the API
+    console.error(error.message);
+  }
+}
+```
+
+### 9. Health Check
 
 ```http
 GET /api/health
@@ -893,8 +1717,7 @@ All error responses follow this format:
 
 ```json
 {
-  "message": "Error description",
-  "status": 400
+  "error": "Error description"
 }
 ```
 
@@ -906,6 +1729,94 @@ All error responses follow this format:
 | 201  | Created (signup)                     |
 | 400  | Bad Request (validation error)       |
 | 401  | Unauthorized (invalid/missing token) |
+| 403  | Forbidden (access denied)            |
 | 404  | Not Found                            |
 | 409  | Conflict (duplicate email)           |
 | 500  | Internal Server Error                |
+
+## Data Models Reference
+
+### User
+
+```typescript
+{
+  id: string;          // UUID
+  name: string;
+  email: string;
+  role: "USER" | "ADMIN";
+  createdAt: string;   // ISO 8601 datetime
+  updatedAt: string;   // ISO 8601 datetime
+}
+```
+
+> **Note**: The `password` field is never included in API responses.
+
+### Product
+
+```typescript
+{
+  id: string;          // UUID
+  name: string;
+  description: string;
+  price: number;       // Float
+  image: string;       // URL
+  sizes: string[];     // e.g., ["S", "M", "L", "XL"]
+  colors: string[];    // e.g., ["black", "white", "navy"]
+  featured: boolean;
+  stock: number;       // Integer
+  categoryId: string;  // UUID
+  createdAt: string;   // ISO 8601 datetime
+  updatedAt: string;   // ISO 8601 datetime
+  category?: Category; // Included when product is fetched with include
+}
+```
+
+### Category
+
+```typescript
+{
+  id: string;          // UUID
+  name: string;
+  slug: string;        // URL-friendly identifier
+  description: string;
+  image: string | null;
+  createdAt: string;   // ISO 8601 datetime
+  updatedAt: string;   // ISO 8601 datetime
+}
+```
+
+### Order
+
+```typescript
+{
+  id: string;              // UUID
+  userId: string;          // UUID
+  total: number;           // Float
+  status: "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+  shippingName: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingPostal: string;
+  shippingCountry: string;
+  stripeSessionId: string | null;
+  createdAt: string;       // ISO 8601 datetime
+  updatedAt: string;       // ISO 8601 datetime
+  items?: OrderItem[];     // Included in most responses
+  user?: { id: string; name: string; email: string }; // Included in findById
+}
+```
+
+### OrderItem
+
+```typescript
+{
+  id: string;          // UUID
+  orderId: string;     // UUID
+  productId: string;   // UUID
+  quantity: number;     // Integer
+  price: number;       // Float (price at time of purchase)
+  size: string;
+  color: string;
+  product?: Product;   // Included when fetched with include
+}
+```

@@ -2,7 +2,7 @@
 
 import { ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/context/cart-context";
+import { useCartStore } from "@/store/useCartStore";
 import { Product } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -11,19 +11,19 @@ interface AddToCartButtonProps {
 }
 
 export function AddToCartButton({ product }: AddToCartButtonProps) {
-  const { addItem } = useCart();
+  const addItem = useCartStore((state) => state.addItem);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (product.stock === 0) return;
+    if (Number(product.stock) === 0) return;
 
-    addItem(product, product.sizes[0], product.colors[0]);
+    addItem(product, product.sizes?.[0] || "", product.colors?.[0] || "");
     toast.success(`${product.name} added to cart`);
   };
 
-  if (product.stock === 0) return null;
+  if (Number(product.stock) === 0) return null;
 
   return (
     <Button

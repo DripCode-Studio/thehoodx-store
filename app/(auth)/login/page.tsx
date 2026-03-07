@@ -12,7 +12,8 @@ import { z } from "zod/v4";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/context/auth-context";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useLogin } from "@/hooks/mutations";
 
 const loginSchema = z.object({
   email: z.email("Enter a valid email address"),
@@ -33,7 +34,8 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/";
-  const { login } = useAuth();
+  const setAuth = useAuthStore((state) => state.setAuth);
+  const loginMutation = useLogin();
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -44,25 +46,20 @@ function LoginContent() {
     resolver: zodResolver(loginSchema),
   });
 
-  const loginMutation = useMutation({
-    mutationFn: async (data: LoginFormData) => {
-      const success = await login(data.email, data.password);
-      if (!success) throw new Error("Invalid credentials");
-      return success;
-    },
-    onSuccess: () => {
-      toast.success("Welcome back!");
-      router.push(redirectTo);
-    },
-    onError: () => {
-      toast.error("Invalid credentials", {
-        description: "Please check your email and password",
-      });
-    },
-  });
-
   const onSubmit = (data: LoginFormData) => {
-    loginMutation.mutate(data);
+    loginMutation.mutate(data, {
+      onSuccess: (res) => {
+        setAuth(res.user, res.accessToken);
+        toast.success("Welcome back!");
+        router.push("/account");
+      },
+      onError: (error: any) => {
+        console.error("Login error:", error);
+        toast.error("Login failed", {
+           description: error?.message || "Please check your email and password",
+        });
+      }
+    });
   };
 
   return (

@@ -1,10 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Truck, RotateCcw, Shield, Headphones } from "lucide-react";
 import { HeroBanner } from "@/components/store/hero-banner";
 import { ProductCard } from "@/components/store/product-card";
 import { Button } from "@/components/ui/button";
-import { products } from "@/lib/data";
+import { useProducts } from "@/hooks/queries";
 
 const features = [
   { icon: Truck, label: "Free Shipping", desc: "On orders over $50" },
@@ -14,7 +16,8 @@ const features = [
 ];
 
 export default function Home() {
-  const latestProducts = products.slice(-3).reverse();
+  const { data, isLoading } = useProducts({ sort: "newest", limit: 3 });
+  const latestProducts = data?.products || [];
 
   return (
     <div>
@@ -62,9 +65,13 @@ export default function Home() {
           </Link>
         </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {latestProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {isLoading ? (
+            <p className="col-span-full text-center text-muted-foreground">Loading latest drops...</p>
+          ) : (
+            latestProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))
+          )}
         </div>
       </section>
 

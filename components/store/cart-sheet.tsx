@@ -11,7 +11,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useCart } from "@/context/cart-context";
+import { useCartStore } from "@/store/useCartStore";
 import { formatPrice } from "@/lib/utils";
 import { CartItemCard } from "./cart-item-card";
 import { ReactNode, useState } from "react";
@@ -21,8 +21,11 @@ interface CartSheetProps {
 }
 
 export function CartSheet({ children }: CartSheetProps) {
-  const { items, removeItem, updateQuantity, totalPrice, totalItems } =
-    useCart();
+  const items = useCartStore((state) => state.items);
+  const removeItem = useCartStore((state) => state.removeItem);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
+  const totalPrice = useCartStore((state) => state.getTotalPrice());
+  const totalItems = useCartStore((state) => state.getTotalItems());
   const [open, setOpen] = useState(false);
 
   return (

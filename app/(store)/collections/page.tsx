@@ -16,48 +16,41 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { products, searchProducts } from "@/lib/data";
+import { useProducts } from "@/hooks/queries";
 import { CATEGORIES, Category } from "@/lib/types";
 
 function CollectionsContent() {
   const searchParams = useSearchParams();
-  const categoryParam = searchParams.get("category") as Category | null;
+  const categoryParam = searchParams.get("category") as string | null;
   const searchQuery = searchParams.get("search") || "";
 
-  const [selectedCategories, setSelectedCategories] = useState<Category[]>(
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
     categoryParam ? [categoryParam] : [],
   );
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc">(
-    "newest",
+    "newest"
   );
 
-  const filteredProducts = useMemo(() => {
-    let result = searchQuery ? searchProducts(searchQuery) : [...products];
-
+  const queryParams = useMemo(() => {
+    const params: Record<string, any> = {
+      sort: sortBy,
+      minPrice: priceRange[0],
+      maxPrice: priceRange[1],
+      limit: 50, // Increase limit for simple display
+    };
+    if (searchQuery) params.search = searchQuery;
+    // API only supports filtering by one category slug via `category` parameter
     if (selectedCategories.length > 0) {
-      result = result.filter((p) => selectedCategories.includes(p.category));
+      params.category = selectedCategories[0];
     }
+    return params;
+  }, [searchQuery, selectedCategories, priceRange, sortBy]);
 
-    result = result.filter(
-      (p) => p.price >= priceRange[0] && p.price <= priceRange[1],
-    );
+  const { data, isLoading } = useProducts(queryParams);
+  const filteredProducts = data?.products || [];
 
-    switch (sortBy) {
-      case "price-asc":
-        result.sort((a, b) => a.price - b.price);
-        break;
-      case "price-desc":
-        result.sort((a, b) => b.price - a.price);
-        break;
-      default:
-        break;
-    }
-
-    return result;
-  }, [selectedCategories, priceRange, sortBy, searchQuery]);
-
-  const toggleCategory = (category: Category) => {
+  const toggleCategory = (category: string) => {
     setSelectedCategories((prev) =>
       prev.includes(category)
         ? prev.filter((c) => c !== category)
@@ -182,7 +175,13 @@ function CollectionsContent() {
 
         {/* Product Grid */}
         <div className="lg:col-span-3">
-          {filteredProducts.length === 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <p className="text-lg font-bold uppercase tracking-tight text-foreground">
                 No products found

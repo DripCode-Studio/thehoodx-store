@@ -17,8 +17,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/context/auth-context";
-import { useCart } from "@/context/cart-context";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useCartStore } from "@/store/useCartStore";
 import { formatPrice } from "@/lib/utils";
 
 const shippingSchema = z.object({
@@ -33,8 +33,11 @@ const shippingSchema = z.object({
 type ShippingFormData = z.infer<typeof shippingSchema>;
 
 export default function CheckoutPage() {
-  const { user } = useAuth();
-  const { items, totalPrice, clearCart } = useCart();
+  const user = useAuthStore((state) => state.user);
+  const items = useCartStore((state) => state.items);
+  const totalPrice = useCartStore((state) => state.getTotalPrice());
+  const clearCart = useCartStore((state) => state.clearCart);
+  
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -353,7 +356,7 @@ export default function CheckoutPage() {
                 >
                   <div className="relative h-16 w-16 shrink-0 bg-neutral-100 dark:bg-neutral-900">
                     <Image
-                      src={item.product.image}
+                      src={item.product.image || "/placeholder.jpg"}
                       alt={item.product.name}
                       fill
                       className="object-cover"

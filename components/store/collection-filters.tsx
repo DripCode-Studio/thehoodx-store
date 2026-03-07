@@ -6,10 +6,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { CATEGORIES, Category } from "@/lib/types";
 
 interface CollectionFiltersProps {
-  selectedCategories: Category[];
+  selectedCategories: string[];
   priceRange: [number, number];
   sortBy: "newest" | "price-asc" | "price-desc";
-  onToggleCategory: (category: Category) => void;
+  onToggleCategory: (category: string) => void;
   onPriceRangeChange: (range: [number, number]) => void;
   onSortChange: (sort: "newest" | "price-asc" | "price-desc") => void;
   onClearFilters: () => void;
