@@ -8,8 +8,8 @@ import { ChevronRight, Minus, Plus, ShoppingBag, Check } from "lucide-react";
 import { toast } from "sonner";
 import { ProductCard } from "@/components/store/product-card";
 import { Button } from "@/components/ui/button";
-import { getProductById, products } from "@/lib/data";
-import { useCart } from "@/context/cart-context";
+import { useProduct } from "@/hooks/queries";
+import { useCartStore } from "@/store/useCartStore";
 import { formatPrice } from "@/lib/utils";
 import { CATEGORIES } from "@/lib/types";
 
@@ -19,18 +19,24 @@ interface ProductPageProps {
 
 export default function ProductPage({ params }: ProductPageProps) {
   const { id } = use(params);
-  const product = getProductById(id);
+  const { data, isLoading } = useProduct(id);
+  const { addItem } = useCartStore();
+  
+  const product = data?.product;
+  const relatedProducts = data?.related || [];
 
-  if (!product) {
-    notFound();
-  }
-
-  const { addItem } = useCart();
-  const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
-  const [selectedColor, setSelectedColor] = useState(product.colors[0]);
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState(1);
 
+  // Sync initial size and color once product loads
+  if (product && !selectedSize && !selectedColor) {
+    setSelectedSize(product.sizes?.[0] || "");
+    setSelectedColor(product.colors?.[0] || "");
+  }
+
   const handleAddToCart = () => {
+    if (!product) return;
     addItem(product, selectedSize, selectedColor, quantity);
     toast.success("Added to cart", {
       description: `${product.name} - ${selectedSize} / ${selectedColor}`,
@@ -38,13 +44,21 @@ export default function ProductPage({ params }: ProductPageProps) {
     });
   };
 
-  const relatedProducts = products
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!product) {
+    notFound();
+  }
 
   const categoryLabel = CATEGORIES.find(
-    (c) => c.value === product.category,
-  )?.label;
+    (c) => c.value === product.category?.slug || c.value === (product.category as unknown as string),
+  )?.label || product.category?.name || "Category";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
@@ -64,7 +78,7 @@ export default function ProductPage({ params }: ProductPageProps) {
           </li>
           <li>
             <Link
-              href={`/collections?category=${product.category}`}
+              href={`/collections?category=${product.category?.slug || product.category}`}
               className="transition-colors hover:text-foreground"
             >
               {categoryLabel}
@@ -81,14 +95,14 @@ export default function ProductPage({ params }: ProductPageProps) {
         {/* Product Image */}
         <div className="relative aspect-square overflow-hidden rounded-2xl bg-neutral-100 dark:bg-neutral-900">
           <Image
-            src={product.image}
+            src={product.image || "/placeholder.jpg"}
             alt={product.name}
             fill
             className="object-cover"
             priority
             sizes="(max-width: 1024px) 100vw, 50vw"
           />
-          {product.stock < 10 && product.stock > 0 && (
+          {Number(product.stock) < 10 && Number(product.stock) > 0 && (
             <span className="absolute left-4 top-4 rounded-full bg-black px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-white">
               Only {product.stock} left
             </span>
@@ -116,7 +130,7 @@ export default function ProductPage({ params }: ProductPageProps) {
               Size
             </h3>
             <div className="mt-3 flex flex-wrap gap-2">
-              {product.sizes.map((size) => (
+              {product.sizes?.map((size) => (
                 <button
                   key={size}
                   onClick={() => setSelectedSize(size)}
@@ -138,7 +152,7 @@ export default function ProductPage({ params }: ProductPageProps) {
               Color
             </h3>
             <div className="mt-3 flex flex-wrap gap-2">
-              {product.colors.map((color) => (
+              {product.colors?.map((color) => (
                 <button
                   key={color}
                   onClick={() => setSelectedColor(color)}
@@ -177,7 +191,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                 size="icon"
                 className="h-10 w-10 cursor-pointer rounded-full"
                 onClick={() => setQuantity(quantity + 1)}
-                disabled={quantity >= product.stock}
+                disabled={quantity >= Number(product.stock)}
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -189,10 +203,10 @@ export default function ProductPage({ params }: ProductPageProps) {
             <Button
               className="h-14 w-full cursor-pointer gap-3 rounded-full bg-black text-xs font-bold uppercase tracking-widest text-white transition-all hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
               onClick={handleAddToCart}
-              disabled={product.stock === 0}
+              disabled={Number(product.stock) === 0}
             >
               <ShoppingBag className="h-5 w-5" />
-              {product.stock === 0 ? "Sold Out" : "Add to Cart"}
+              {Number(product.stock) === 0 ? "Sold Out" : "Add to Cart"}
             </Button>
           </div>
 
@@ -222,7 +236,7 @@ export default function ProductPage({ params }: ProductPageProps) {
             You Might Also Like
           </h2>
           <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {relatedProducts.map((relatedProduct) => (
+            {relatedProducts.map((relatedProduct: any) => (
               <ProductCard key={relatedProduct.id} product={relatedProduct} />
             ))}
           </div>

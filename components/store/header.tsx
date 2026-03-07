@@ -7,13 +7,13 @@ import { ShoppingBag, User, Menu, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useCart } from "@/context/cart-context";
-import { useAuth } from "@/context/auth-context";
+import { useCartStore } from "@/store/useCartStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import { CartSheet } from "./cart-sheet";
 
 export function Header() {
-  const { totalItems } = useCart();
-  const { user } = useAuth();
+  const totalItems = useCartStore((state) => state.getTotalItems());
+  const user = useAuthStore((state) => state.user);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -62,7 +62,7 @@ export function Header() {
                   >
                     My Account
                   </Link>
-                  {user.isAdmin && (
+                  {user.role === "ADMIN" && (
                     <Link
                       href="/admin"
                       className="text-lg font-medium text-primary transition-colors hover:text-primary/80"

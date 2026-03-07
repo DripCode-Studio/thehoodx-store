@@ -1,17 +1,9 @@
-export type Category = "tshirt" | "shorts";
+import { Product, Category as ApiCategory } from "./schema";
 
-export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: Category;
-  image: string;
-  sizes: string[];
-  colors: string[];
-  featured: boolean;
-  stock: number;
-}
+export type CategorySlug = "tshirt" | "shorts";
+
+// Re-export Product so other files don't break their imports
+export type { Product, ApiCategory as Category };
 
 export interface CartItem {
   product: Product;
@@ -43,7 +35,7 @@ export interface Order {
   };
 }
 
-export const CATEGORIES: { value: Category; label: string }[] = [
+export const CATEGORIES: { value: CategorySlug | string; label: string }[] = [
   { value: "tshirt", label: "T-Shirts" },
   { value: "shorts", label: "Shorts" },
 ];

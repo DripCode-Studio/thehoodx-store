@@ -5,14 +5,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
 import { Mail, Lock, Eye, EyeOff, User, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/context/auth-context";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useSignup } from "@/hooks/mutations";
 
 const signupSchema = z
   .object({
@@ -40,7 +40,8 @@ function SignupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/";
-  const { signup } = useAuth();
+  const setAuth = useAuthStore((state) => state.setAuth);
+  const signupMutation = useSignup();
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -51,25 +52,20 @@ function SignupContent() {
     resolver: zodResolver(signupSchema),
   });
 
-  const signupMutation = useMutation({
-    mutationFn: async (data: SignupFormData) => {
-      const success = await signup(data.email, data.password, data.name);
-      if (!success) throw new Error("Could not create account");
-      return success;
-    },
-    onSuccess: () => {
-      toast.success("Account created successfully!");
-      router.push(redirectTo);
-    },
-    onError: () => {
-      toast.error("Could not create account", {
-        description: "This email may already be registered",
-      });
-    },
-  });
-
   const onSubmit = (data: SignupFormData) => {
-    signupMutation.mutate(data);
+    signupMutation.mutate(data, {
+      onSuccess: (res) => {
+        setAuth(res.user, res.accessToken);
+        toast.success("Account created successfully!");
+        router.push("/account");
+      },
+      onError: (error: any) => {
+        console.error("Signup error:", error);
+        toast.error("Could not create account", {
+          description: error?.message || "This email may already be registered",
+        });
+      }
+    });
   };
 
   return (
