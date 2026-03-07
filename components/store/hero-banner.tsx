@@ -23,7 +23,7 @@ export function HeroBanner() {
       <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8 lg:py-40">
         <div className="max-w-xl animate-in fade-in slide-in-from-bottom-4 duration-700">
           <span className="mb-4 inline-block text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
-            Nouvelle Collection 2026
+            New Collection 2026
           </span>
 
           <h1 className="mb-6 text-4xl font-black uppercase leading-[1.05] tracking-tight sm:text-5xl lg:text-7xl">

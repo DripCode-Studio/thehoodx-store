@@ -43,7 +43,7 @@ export function Header() {
                 className="text-lg font-medium text-foreground transition-colors hover:text-primary"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Accueil
+                Home
               </Link>
               <Link
                 href="/collections"
@@ -108,7 +108,7 @@ export function Header() {
             href="/"
             className="text-sm font-medium text-foreground transition-colors hover:text-primary"
           >
-            Accueil
+            Home
           </Link>
           <Link
             href="/collections"
