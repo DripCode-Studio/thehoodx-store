@@ -15,7 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <AuthProvider>
         <CartProvider>
           {children}
-          <Toaster position="bottom-left" />
+          <Toaster position="bottom-right" />
         </CartProvider>
       </AuthProvider>
     </QueryClientProvider>
