@@ -88,7 +88,7 @@ export function Header() {
             className="h-14 w-14 object-contain"
           />
           <span
-            className="text-xl font-black uppercase tracking-[0.15em] text-foreground"
+            className="text-sm sm:text-xl font-black uppercase tracking-[0.15em] text-foreground"
             style={{ fontFamily: "'Arial Black', 'Impact', sans-serif" }}
           >
             THE-HØØDX
