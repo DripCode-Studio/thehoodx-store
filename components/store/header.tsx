@@ -18,13 +18,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-      {/* Marquee banner */}
-      <div className="overflow-hidden bg-primary text-primary-foreground py-1.5">
-        <div className="animate-marquee whitespace-nowrap text-xs font-medium tracking-widest uppercase">
-          WE DON&apos;T FOLLOW TRENDS. WE SET THEM. — NO THRONE GIVEN. ONLY
-          TAKEN.
-        </div>
-      </div>
+
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
         {/* Mobile menu button */}
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>

@@ -5,16 +5,31 @@
 @custom-variant dark (&:is(.dark *));
 
 @keyframes marquee {
-  0% {
-    transform: translateX(100%);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 @utility animate-marquee {
-  animation: marquee 30s linear infinite;
+  animation: marquee 20s linear infinite;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { text-shadow: 0 0 0px rgba(0,0,0,0); }
+  50%  { text-shadow: 0 0 20px rgba(0,0,0,0.25), 0 0 40px rgba(0,0,0,0.15); }
+  100% { text-shadow: 0 0 0px rgba(0,0,0,0); }
+}
+
+.hero-brand {
+  opacity: 0;
+  transform: translateY(40px);
+  animation: fadeUp 1.2s ease forwards, shimmer 3.5s ease-in-out infinite 1.2s;
 }
 
 @theme inline {
